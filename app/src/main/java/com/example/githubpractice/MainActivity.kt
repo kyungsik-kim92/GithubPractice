@@ -2,7 +2,10 @@ package com.example.githubpractice
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.githubpractice.adapter.UserAdapter
 import com.example.githubpractice.databinding.ActivityMainBinding
@@ -17,6 +20,15 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var userAdapter : UserAdapter
+
+    private val retrofit = Retrofit.Builder()
+        .baseUrl("https://api.github.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var searchFor : String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,26 +36,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://api.github.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
 
 
-        val githubService = retrofit.create(GithubService::class.java)
-        githubService.listRepos("square").enqueue(object : Callback<List<Repo>> {
-            override fun onResponse(call: Call<List<Repo>>, response: Response<List<Repo>>) {
-                Log.d("tag", response.body().toString())
-            }
 
-            override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
+//        githubService.listRepos("square").enqueue(object : Callback<List<Repo>> {
+//            override fun onResponse(call: Call<List<Repo>>, response: Response<List<Repo>>) {
+//                Log.d("tag", response.body().toString())
+//            }
+//
+//            override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
+//
+//            }
+//
+//        })
 
-            }
 
-        })
+        userAdapter = UserAdapter()
 
-
-        val userAdapter = UserAdapter()
         binding.userRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = userAdapter
@@ -51,7 +60,33 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        githubService.searchUsers("squar").enqueue(object : Callback<UserDto> {
+
+        val runnable = Runnable{
+            searchUser()
+        }
+
+        binding.searchEditText.addTextChangedListener {
+
+            searchFor = it.toString()
+            handler.removeCallbacks (runnable)
+            handler.postDelayed(runnable,300)
+
+
+        }
+
+
+
+
+
+    }
+
+
+    private fun searchUser(){
+
+        val githubService = retrofit.create(GithubService::class.java)
+
+
+        githubService.searchUsers(searchFor).enqueue(object : Callback<UserDto> {
             override fun onResponse(call: Call<UserDto>, response: Response<UserDto>) {
                 Log.d("tag2", response.body().toString())
                 userAdapter.submitList(response.body()?.items)
@@ -60,11 +95,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<UserDto>, t: Throwable) {
-
+            t.printStackTrace()
             }
 
         })
-
-
     }
 }

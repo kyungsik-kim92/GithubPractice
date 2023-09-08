@@ -6,7 +6,7 @@ data class User(
     @SerializedName("id")
     val id: Int,
     @SerializedName("login")
-    val userName: String
+    val username: String
 
 
 )
