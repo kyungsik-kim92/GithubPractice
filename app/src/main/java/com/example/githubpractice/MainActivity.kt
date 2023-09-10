@@ -1,5 +1,6 @@
 package com.example.githubpractice
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -51,7 +52,13 @@ class MainActivity : AppCompatActivity() {
 //        })
 
 
-        userAdapter = UserAdapter()
+        userAdapter = UserAdapter{
+            val intent = Intent(this@MainActivity,RepoActivity::class.java)
+            intent.putExtra("username",it.username)
+            startActivity(intent)
+
+        }
+
 
         binding.userRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
